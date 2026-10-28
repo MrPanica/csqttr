@@ -138,15 +138,32 @@ fun HappTunnelScreen(settingsStore: SettingsStore, version: String, onSettings: 
                     HappField("Порт PEER", port, { port = it.filter(Char::isDigit).take(5) }, Modifier.weight(1f), number = true, enabled = loaded && !busy, compact = true)
                 }
                 Spacer(Modifier.height(4.dp))
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
-                HappField("Пароль туннеля", password, { password = it }, Modifier.weight(1.3f), password = true, enabled = loaded && !busy, compact = true)
-                Box(Modifier.weight(1f)) {
-                if (!linkTokenActive && ownerHashes.isEmpty() && authMode != "auto_js" && hashMode == "manual" || ownerHashes.isNotEmpty()) {
-                    OutlinedButton(onClick = { showHashes = true }, modifier = Modifier.fillMaxWidth().height(40.dp), contentPadding = PaddingValues(horizontal = 4.dp), enabled = !busy) { Text("Настроить хеши", fontSize = 14.sp, maxLines = 1) }
-                } else {
-                    Button(onClick = { if (token.isNotBlank()) showVkSession = true else onVkAuthRequested() }, modifier = Modifier.fillMaxWidth().height(40.dp), contentPadding = PaddingValues(horizontal = 4.dp), enabled = !busy && !linkTokenActive) { Text(if (linkTokenActive) "Токен VK из ссылки" else if (token.isNotBlank()) "Аккаунт VK подключён" else "Войти в VK", fontSize = 14.sp, lineHeight = 16.sp, maxLines = 2, textAlign = androidx.compose.ui.text.style.TextAlign.Center) }
-                }
-                }
+                HappField("Пароль туннеля", password, { password = it }, Modifier.fillMaxWidth(), password = true, enabled = loaded && !busy, compact = true)
+                Spacer(Modifier.height(4.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = { if (token.isNotBlank()) showVkSession = true else onVkAuthRequested() },
+                        modifier = Modifier.weight(1.1f).height(40.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                        enabled = !busy && !linkTokenActive
+                    ) {
+                        Text(
+                            if (linkTokenActive) "Токен VK из ссылки"
+                            else if (token.isNotBlank()) "VK подключён ✓"
+                            else "Войти в VK",
+                            fontSize = 13.sp,
+                            maxLines = 1,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = { showHashes = true },
+                        modifier = Modifier.weight(0.9f).height(40.dp),
+                        contentPadding = PaddingValues(horizontal = 4.dp),
+                        enabled = !busy
+                    ) {
+                        Text("Настроить хеши", fontSize = 13.sp, maxLines = 1)
+                    }
                 }
                 if (ownerHashes.isNotEmpty()) Text("Хеши владельца: ${ownerHashes.count { it !in removedOwner }} · свои: ${parts.size}", color = c.accent, fontSize = 12.sp)
                 if (ownerHashes.isEmpty() && !linkTokenActive) HappChoice("Режим хешей", when(hashMode) { "auto_api" -> "Авто API"; "auto_js" -> "Авто ВК"; else -> "Ручные хеши" }, listOf("Ручные хеши", "Авто API", "Авто ВК"), ::changeHash,
