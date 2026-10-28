@@ -88,17 +88,17 @@ object CsqttConstants {
         const val ACTION_UPDATE = "update"
 
         const val GITHUB_RELEASES_URL =
-            "https://api.github.com/repos/Afteroid/csqttr/releases?per_page=30"
+            "https://api.github.com/repos/MrPanica/csqttr/releases?per_page=30"
         const val GITHUB_LATEST_RELEASE_URL =
-            "https://api.github.com/repos/Afteroid/csqttr/releases/latest"
+            "https://api.github.com/repos/MrPanica/csqttr/releases/latest"
         const val GITHUB_LATEST_RELEASE_WEB_URL =
-            "https://github.com/Afteroid/csqttr/releases/latest"
+            "https://github.com/MrPanica/csqttr/releases/latest"
         const val GITHUB_RELEASE_TAG_URL_PREFIX =
-            "https://github.com/Afteroid/csqttr/releases/tag/"
+            "https://github.com/MrPanica/csqttr/releases/tag/"
         const val GITHUB_TAGS_URL =
-            "https://api.github.com/repos/Afteroid/csqttr/tags?per_page=100"
+            "https://api.github.com/repos/MrPanica/csqttr/tags?per_page=100"
         const val GITHUB_TAG_TREE_URL_PREFIX =
-            "https://github.com/Afteroid/csqttr/tree/"
+            "https://github.com/MrPanica/csqttr/tree/"
     }
 
     object Notifications {
@@ -174,10 +174,10 @@ object CsqttConstants {
     }
 
     object Links {
-        const val RELEASES = "https://github.com/Afteroid/csqttr/releases"
-        const val ISSUES = "https://github.com/Afteroid/csqttr/issues/new"
+        const val RELEASES = "https://github.com/MrPanica/csqttr/releases"
+        const val ISSUES = "https://github.com/MrPanica/csqttr/issues/new"
         const val DEVELOPER_PROFILE = "https://github.com/amurcanov"
-        const val REPOSITORY = "https://github.com/Afteroid/csqttr"
+        const val REPOSITORY = "https://github.com/MrPanica/csqttr"
         const val TELEGRAM = "https://t.me/amurcanov_telegram"
         const val TELEGRAM_HANDLE = "t.me/amurcanov_telegram"
     }

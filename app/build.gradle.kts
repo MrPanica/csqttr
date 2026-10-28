@@ -26,10 +26,13 @@ val releaseKeystoreFile = releaseKeystorePath?.let { path ->
     } else {
         rootProject.file(path)
     }
-}
+} ?: rootProject.file("keystore/release.jks").takeIf { it.isFile }
 val releaseStorePassword = requiredReleaseSigningValue("KEYSTORE_PASSWORD")
+    ?: ("csqttpass123".takeIf { releaseKeystoreFile?.isFile == true })
 val releaseKeyAlias = requiredReleaseSigningValue("KEY_ALIAS")
+    ?: ("csqtt".takeIf { releaseKeystoreFile?.isFile == true })
 val releaseKeyPassword = requiredReleaseSigningValue("KEY_PASSWORD")
+    ?: ("csqttpass123".takeIf { releaseKeystoreFile?.isFile == true })
 val releaseSigningProblems = mutableListOf<String>().apply {
     when {
         releaseKeystoreFile == null -> add("KEYSTORE_FILE is not configured")
@@ -72,8 +75,8 @@ android {
         applicationId = "csqtt.quic.amurcanov"
         minSdk = 26
         targetSdk = 37
-        versionCode = 240
-        versionName = "2.5.5"
+        versionCode = 241
+        versionName = "2.5.6"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {

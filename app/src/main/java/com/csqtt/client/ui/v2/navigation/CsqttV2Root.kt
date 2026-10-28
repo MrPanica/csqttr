@@ -253,6 +253,19 @@ fun CsqttV2Root(
                     OVERLAY_ABOUT -> V2AboutScreen(
                         version = version,
                         onBack = { overlay = OVERLAY_SETTINGS },
+                        onCheckUpdates = {
+                            scope.launch {
+                                context.showRaisedToast("Проверка обновлений...", Toast.LENGTH_SHORT)
+                                val release = fetchLatestReleaseInfo(version)
+                                if (release != null && isNewerVersion(version, release.versionTag)) {
+                                    pendingRelease = release
+                                } else if (release != null) {
+                                    context.showRaisedToast("У вас установлена актуальная версия (${release.versionTag})", Toast.LENGTH_SHORT)
+                                } else {
+                                    context.showRaisedToast("Не удалось проверить обновления", Toast.LENGTH_SHORT)
+                                }
+                            }
+                        },
                     )
 
                     else -> Column(modifier = Modifier.fillMaxSize()) {

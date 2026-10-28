@@ -69,11 +69,18 @@ jobs:
           pwsh -File scripts/native_client_provenance.ps1 -Mode Write
           pwsh -File scripts/native_client_provenance.ps1 -Mode Verify
 
-      - name: Create release signing keystore
+      - name: Setup release signing keystore
         run: |
-          keytool -genkey -v -keystore release.jks -alias csqtt -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass csqttpass123 -keypass csqttpass123 \
-            -dname "CN=CSQTT, OU=Android, O=CSQTT, L=Default, ST=Default, C=RU"
+          if [ -f "keystore/release.jks" ]; then
+            echo "Using tracked release keystore from keystore/release.jks"
+            cp keystore/release.jks release.jks
+          else
+            echo "Fallback: creating release keystore"
+            keytool -genkey -v -keystore release.jks -alias csqtt -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass csqttpass123 -keypass csqttpass123 \
+              -dname "CN=CSQTT, OU=Android, O=CSQTT, L=Default, ST=Default, C=RU"
+          fi
+          keytool -list -v -keystore release.jks -storepass csqttpass123
 
       - name: Build APKs with Gradle
         run: |
