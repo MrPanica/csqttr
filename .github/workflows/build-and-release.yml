@@ -49,6 +49,8 @@ jobs:
           cargo install cargo-ndk
 
       - name: Build Rust client native libraries
+        env:
+          RUSTFLAGS: "-A deprecated"
         run: |
           echo "Using NDK: $ANDROID_NDK_HOME"
           cd rust-client

@@ -1,4 +1,5 @@
 #![allow(linker_messages)]
+#![allow(deprecated)]
 
 mod auth;
 mod captcha;
