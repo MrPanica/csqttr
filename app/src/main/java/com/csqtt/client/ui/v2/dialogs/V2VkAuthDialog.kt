@@ -267,7 +267,7 @@ internal fun V2VkAuthDialog(
                             }
                         },
                         enabled = manualTokenInput.isNotBlank(),
-                        style = V2PillStyle.Primary,
+                        style = V2PillStyle.Accent,
                         height = 46.dp,
                         modifier = Modifier.fillMaxWidth(),
                     )

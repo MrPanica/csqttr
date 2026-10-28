@@ -139,14 +139,7 @@ object CsqttConstants {
         const val VK_OAUTH_SCOPE = 1073737727
         const val VK_OAUTH_REDIRECT_URI = "https://oauth.vk.com/blank.html"
         const val VK_OAUTH_AUTH_URL =
-            "https://oauth.vk.com/authorize" +
-                "?client_id=7793118" +
-                "&scope=1073737727" +
-                "&redirect_uri=https%3A%2F%2Foauth.vk.com%2Fblank.html" +
-                "&display=mobile" +
-                "&response_type=token" +
-                "&revoke=1" +
-                "&v=5.199"
+            "https://oauth.vk.com/authorize?client_id=7793118&scope=1073737727&redirect_uri=https%3A%2F%2Foauth.vk.com%2Fblank.html&display=mobile&response_type=token&revoke=1&v=5.199"
         const val VK_LOGIN_URL = VK_OAUTH_AUTH_URL
         const val API_METHOD_BASE_URL = "https://api.vk.ru/method/"
         const val API_VERSION = "5.199"
