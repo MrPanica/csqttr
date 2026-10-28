@@ -41,10 +41,12 @@ jobs:
         uses: actions-rust-lang/setup-rust-toolchain@v1
         with:
           toolchain: stable
-          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+          cache: false
 
-      - name: Install cargo-ndk
-        run: cargo install cargo-ndk
+      - name: Add Android Rust Targets & install cargo-ndk
+        run: |
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+          cargo install cargo-ndk
 
       - name: Build Rust client native libraries
         run: |
