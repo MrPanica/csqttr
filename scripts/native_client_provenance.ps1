@@ -17,9 +17,9 @@ if ([string]::IsNullOrWhiteSpace($Root)) {
 else {
     $projectRoot = [IO.Path]::GetFullPath($Root)
 }
-$manifestPath = Join-Path $projectRoot "app\src\main\libclient.provenance.json"
-$cargoTomlPath = Join-Path $projectRoot "rust-client\Cargo.toml"
-$cargoLockPath = Join-Path $projectRoot "rust-client\Cargo.lock"
+$manifestPath = Join-Path $projectRoot "app/src/main/libclient.provenance.json"
+$cargoTomlPath = Join-Path $projectRoot "rust-client/Cargo.toml"
+$cargoLockPath = Join-Path $projectRoot "rust-client/Cargo.lock"
 $marker = "CSQTT_RUST_NATIVE_PRODUCTION_V1"
 $schema = "csqtt.native-client-provenance.v3"
 $producer = "rust-client/build_so.bat"
@@ -32,8 +32,8 @@ $specs = @(
         Abi = "arm64-v8a"
         Target = "aarch64-linux-android"
         RelativePath = "app/src/main/jniLibs/arm64-v8a/libclient.so"
-        ProductionPath = Join-Path $projectRoot "app\src\main\jniLibs\arm64-v8a\libclient.so"
-        CargoPath = Join-Path $projectRoot "build\rust-client-android-arm64\aarch64-linux-android\release\client"
+        ProductionPath = Join-Path $projectRoot "app/src/main/jniLibs/arm64-v8a/libclient.so"
+        CargoPath = Join-Path $projectRoot "build/rust-client-android-arm64/aarch64-linux-android/release/client"
         ElfClass = 2
         ElfMachine = 183
     },
@@ -41,8 +41,8 @@ $specs = @(
         Abi = "armeabi-v7a"
         Target = "armv7-linux-androideabi"
         RelativePath = "app/src/main/jniLibs/armeabi-v7a/libclient.so"
-        ProductionPath = Join-Path $projectRoot "app\src\main\jniLibs\armeabi-v7a\libclient.so"
-        CargoPath = Join-Path $projectRoot "build\rust-client-android-armv7\armv7-linux-androideabi\release\client"
+        ProductionPath = Join-Path $projectRoot "app/src/main/jniLibs/armeabi-v7a/libclient.so"
+        CargoPath = Join-Path $projectRoot "build/rust-client-android-armv7/armv7-linux-androideabi/release/client"
         ElfClass = 1
         ElfMachine = 40
     },
@@ -50,8 +50,8 @@ $specs = @(
         Abi = "x86_64"
         Target = "x86_64-linux-android"
         RelativePath = "app/src/main/jniLibs/x86_64/libclient.so"
-        ProductionPath = Join-Path $projectRoot "app\src\main\jniLibs\x86_64\libclient.so"
-        CargoPath = Join-Path $projectRoot "build\rust-client-android-x86_64\x86_64-linux-android\release\client"
+        ProductionPath = Join-Path $projectRoot "app/src/main/jniLibs/x86_64/libclient.so"
+        CargoPath = Join-Path $projectRoot "build/rust-client-android-x86_64/x86_64-linux-android/release/client"
         ElfClass = 2
         ElfMachine = 62
     }
@@ -88,15 +88,15 @@ function Get-Sha256 {
 
 function Get-BuildInputHash {
     $entries = @(
-        (Join-Path $projectRoot "rust-client\build_so.bat"),
-        (Join-Path $projectRoot "rust-client\build_android_abis.ps1"),
-        (Join-Path $projectRoot "rust-client\Cargo.toml"),
-        (Join-Path $projectRoot "rust-client\Cargo.lock"),
+        (Join-Path $projectRoot "rust-client/build_so.bat"),
+        (Join-Path $projectRoot "rust-client/build_android_abis.ps1"),
+        (Join-Path $projectRoot "rust-client/Cargo.toml"),
+        (Join-Path $projectRoot "rust-client/Cargo.lock"),
         (Join-Path $projectRoot "rust-client"),
-        (Join-Path $projectRoot "rust-client\vendor\primp"),
-        (Join-Path $projectRoot "scripts\find_android_sdk_ndk.bat"),
-        (Join-Path $projectRoot "scripts\native_client_provenance.ps1"),
-        (Join-Path $projectRoot "shared\wire_protocol.rs")
+        (Join-Path $projectRoot "rust-client/vendor/primp"),
+        (Join-Path $projectRoot "scripts/find_android_sdk_ndk.bat"),
+        (Join-Path $projectRoot "scripts/native_client_provenance.ps1"),
+        (Join-Path $projectRoot "shared/wire_protocol.rs")
     )
     $files = @()
     foreach ($entry in $entries) {
