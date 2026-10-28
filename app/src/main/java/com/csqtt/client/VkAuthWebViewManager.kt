@@ -214,7 +214,13 @@ internal class VkAuthSession(
                     handleUrl(url)
                     return true
                 }
-                val path = request.url.path ?: ""
+                val uri = request.url
+                val scheme = uri.scheme?.lowercase()
+                if (scheme != "http" && scheme != "https") {
+                    // Prevent external browser intent hijacking (e.g. vk://, intent://)
+                    return true
+                }
+                val path = uri.path ?: ""
                 if (phase == VkAuthPhase.LOGIN && (path.startsWith("/feed") || isVkLoggedIn())) {
                     switchToTokenPhase(v)
                     return true
@@ -437,20 +443,10 @@ internal class VkAuthSession(
             return
         }
         val expiresIn = params["expires_in"]?.toLongOrNull() ?: 0L
-        if (expiresIn == 0L) {
-            finished = true
-            mainHandler.removeCallbacksAndMessages(null)
-            runCatching { CookieManager.getInstance().flush() }
-            onToken(VkAuthPayload(token = token, userId = params["user_id"].orEmpty(), expiresIn = 0L))
-        } else if (!nonPermanentRetried) {
-            nonPermanentRetried = true
-            repeatAuthorization()
-        } else {
-            finished = true
-            mainHandler.removeCallbacksAndMessages(null)
-            runCatching { CookieManager.getInstance().flush() }
-            onToken(VkAuthPayload(token = token, userId = params["user_id"].orEmpty(), expiresIn = expiresIn))
-        }
+        finished = true
+        mainHandler.removeCallbacksAndMessages(null)
+        runCatching { CookieManager.getInstance().flush() }
+        onToken(VkAuthPayload(token = token, userId = params["user_id"].orEmpty(), expiresIn = expiresIn))
     }
 
     private fun handleSilentPayload(fragment: String) {

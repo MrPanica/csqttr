@@ -226,7 +226,7 @@ class MainActivity : ComponentActivity() {
                 if (design == "classic") CSQTTTheme(themeMode = chosenTheme) {
                     com.csqtt.client.ui.legacy.dialogs.VkAuthDialog(onToken, onDismiss = { showVkAuthDialog = false })
                 } else com.csqtt.client.ui.v2.design.CsqttV2Theme(darkTheme = dark) {
-                    VkAuthDialog(onToken, onDismiss = { showVkAuthDialog = false })
+                    V2VkAuthDialog(onToken, onDismiss = { showVkAuthDialog = false })
                 }
             }
             val pendingLink = pendingDeepLink

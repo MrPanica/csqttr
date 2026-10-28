@@ -457,7 +457,7 @@ private val DEPLOY_LAST_INSPECTION_PANEL = booleanPreferencesKey("deploy_last_in
     }
     val participantShowLogs: Flow<Boolean> = dataStore.data.map { prefs ->
         val profile = prefs[ACTIVE_PROFILE] ?: 0
-        prefs[getProfileKey(PARTICIPANT_SHOW_LOGS, profile)] ?: false
+        prefs[getProfileKey(PARTICIPANT_SHOW_LOGS, profile)] ?: true
     }
 
     val peer: Flow<String> = dataStore.data.map { prefs ->

@@ -11,10 +11,12 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -57,9 +60,26 @@ import com.csqtt.client.VkAuthWebViewManager
 import com.csqtt.client.ui.v2.components.V2CircleIconButton
 import com.csqtt.client.ui.v2.components.V2PillButton
 import com.csqtt.client.ui.v2.components.V2PillStyle
+import com.csqtt.client.ui.v2.components.V2TextField
 import com.csqtt.client.ui.v2.design.V2BodyFamily
 import com.csqtt.client.ui.v2.design.V2Spacing
 import com.csqtt.client.ui.v2.design.V2Theme
+
+internal fun extractVkToken(raw: String): String {
+    val trimmed = raw.trim()
+    if (trimmed.isEmpty()) return ""
+    if (trimmed.startsWith("vk1.a.")) {
+        val end = trimmed.indexOfAny(charArrayOf('&', '#', ' ', '\t', '\r', '\n'))
+        return if (end != -1) trimmed.substring(0, end) else trimmed
+    }
+    val idx = trimmed.indexOf("access_token=")
+    if (idx != -1) {
+        val token = trimmed.substring(idx + "access_token=".length)
+        val end = token.indexOfAny(charArrayOf('&', '#', ' ', '\t', '\r', '\n'))
+        return if (end != -1) token.substring(0, end) else token
+    }
+    return trimmed
+}
 
 @Composable
 internal fun V2VkAuthDialog(
@@ -73,6 +93,8 @@ internal fun V2VkAuthDialog(
     var uiReady by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var phase by remember { mutableStateOf(VkAuthPhase.LOGIN) }
+    var manualMode by remember { mutableStateOf(false) }
+    var manualTokenInput by remember { mutableStateOf("") }
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -120,12 +142,18 @@ internal fun V2VkAuthDialog(
         label = "vk_auth_web_alpha",
     )
 
-    val title = when (phase) {
-        VkAuthPhase.LOGIN -> "Вход в аккаунт ВК"
-        VkAuthPhase.TOKEN -> "Получение токена"
+    val title = if (manualMode) {
+        "Ввод токена VK"
+    } else {
+        when (phase) {
+            VkAuthPhase.LOGIN -> "Вход в аккаунт ВК"
+            VkAuthPhase.TOKEN -> "Получение токена"
+        }
     }
 
-    val subtitle = if (phase == VkAuthPhase.LOGIN) {
+    val subtitle = if (manualMode) {
+        "Вставьте токен или ссылку с токеном"
+    } else if (phase == VkAuthPhase.LOGIN) {
         "Войдите любым способом для получения токена"
     } else {
         null
@@ -184,6 +212,17 @@ internal fun V2VkAuthDialog(
                         overflow = TextOverflow.Ellipsis,
                     )
                 }
+                TextButton(
+                    onClick = { manualMode = !manualMode },
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    Text(
+                        text = if (manualMode) "Через VK" else "Ввести токен",
+                        color = colors.accent,
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
                 V2CircleIconButton(
                     icon = Icons.Filled.Close,
                     contentDescription = "Закрыть",
@@ -202,62 +241,95 @@ internal fun V2VkAuthDialog(
                 )
             }
 
-            // Webview Container
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .fillMaxHeight(0.82f),
-                contentAlignment = Alignment.Center,
-            ) {
-                AndroidView(
-                    factory = { ctx ->
-                        FrameLayout(ctx).apply {
-                            isFocusable = false
-                            isFocusableInTouchMode = false
-                            descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
-                            val radius = 16f * ctx.resources.displayMetrics.density
-                            outlineProvider = object : ViewOutlineProvider() {
-                                override fun getOutline(view: View, outline: Outline) {
-                                    outline.setRoundRect(0, 0, view.width, view.height, radius)
+            if (manualMode) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = V2Spacing.Sm),
+                    verticalArrangement = Arrangement.spacedBy(V2Spacing.Md),
+                ) {
+                    V2TextField(
+                        value = manualTokenInput,
+                        onValueChange = { manualTokenInput = it },
+                        placeholder = "vk1.a... или https://oauth.vk.com/blank.html#access_token=...",
+                        singleLine = false,
+                        maxLines = 4,
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 90.dp),
+                    )
+                    V2PillButton(
+                        text = "Сохранить токен",
+                        onClick = {
+                            val extracted = extractVkToken(manualTokenInput)
+                            if (extracted.isNotBlank()) {
+                                animateDismiss {
+                                    onToken(VkAuthPayload(token = extracted, userId = "", expiresIn = 0L))
                                 }
                             }
-                            clipToOutline = true
-                            addView(
-                                webView,
-                                FrameLayout.LayoutParams(
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                ),
-                            )
-                            post { webView.requestFocus() }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .alpha(webAlpha),
-                )
-
-                if (!uiReady && errorMessage == null) {
-                    CircularProgressIndicator(color = colors.accent)
+                        },
+                        enabled = manualTokenInput.isNotBlank(),
+                        style = V2PillStyle.Primary,
+                        height = 46.dp,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                 }
+            } else {
+                // Webview Container
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(0.82f),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    AndroidView(
+                        factory = { ctx ->
+                            FrameLayout(ctx).apply {
+                                isFocusable = false
+                                isFocusableInTouchMode = false
+                                descendantFocusability = ViewGroup.FOCUS_AFTER_DESCENDANTS
+                                val radius = 16f * ctx.resources.displayMetrics.density
+                                outlineProvider = object : ViewOutlineProvider() {
+                                    override fun getOutline(view: View, outline: Outline) {
+                                        outline.setRoundRect(0, 0, view.width, view.height, radius)
+                                    }
+                                }
+                                clipToOutline = true
+                                addView(
+                                    webView,
+                                    FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                    ),
+                                )
+                                post { webView.requestFocus() }
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .alpha(webAlpha),
+                    )
 
-                errorMessage?.let { message ->
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(V2Spacing.Md),
-                        modifier = Modifier.padding(V2Spacing.Lg),
-                    ) {
-                        Text(
-                            text = message,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = V2BodyFamily),
-                            color = colors.error,
-                        )
-                        V2PillButton(
-                            text = "Закрыть",
-                            onClick = { animateDismiss() },
-                            style = V2PillStyle.Contrast,
-                            height = 50.dp,
-                        )
+                    if (!uiReady && errorMessage == null) {
+                        CircularProgressIndicator(color = colors.accent)
+                    }
+
+                    errorMessage?.let { message ->
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(V2Spacing.Md),
+                            modifier = Modifier.padding(V2Spacing.Lg),
+                        ) {
+                            Text(
+                                text = message,
+                                style = MaterialTheme.typography.bodyMedium.copy(fontFamily = V2BodyFamily),
+                                color = colors.error,
+                            )
+                            V2PillButton(
+                                text = "Закрыть",
+                                onClick = { animateDismiss() },
+                                style = V2PillStyle.Contrast,
+                                height = 50.dp,
+                            )
+                        }
                     }
                 }
             }
