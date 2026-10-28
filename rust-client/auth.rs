@@ -225,11 +225,8 @@ impl VkAuth {
                     return Err(error);
                 }
                 Err(error) => {
-                    if is_network_or_dns_error(&error) {
-                        return Err(error);
-                    }
                     crate::log_error!(
-                        "[STREAM {stream_id}] [VK Auth] VK Calls path failed after 2 attempts ({error}), falling back to auto captcha"
+                        "[STREAM {stream_id}] [VK Auth] VK Calls path failed after 3 attempts ({error}), falling back to auto captcha"
                     );
                 }
             }
@@ -317,11 +314,11 @@ impl VkAuth {
 
     async fn vk_calls_with_retries(&self, link: &str, stream_id: usize) -> Result<TurnCredentials> {
         let mut last_error = None;
-        for attempt in 1..=2 {
+        for attempt in 1..=3 {
             match self.vk_calls_path(link, stream_id).await {
                 Ok(credentials) => {
                     crate::log_error!(
-                        "[STREAM {stream_id}] [VK Auth] Success via VK Calls path (attempt {attempt}/2)"
+                        "[STREAM {stream_id}] [VK Auth] Success via VK Calls path (attempt {attempt}/3)"
                     );
                     return Ok(credentials);
                 }
@@ -338,12 +335,11 @@ impl VkAuth {
                     return Err(error);
                 }
                 Err(error) => {
-                    if is_network_or_dns_error(&error) {
-                        return Err(error);
-                    }
+                    let is_net = is_network_or_dns_error(&error);
                     last_error = Some(error);
-                    if attempt < 2 {
-                        random_delay(300, 500).await;
+                    if attempt < 3 {
+                        let delay_ms = if is_net { 1000 * attempt as u64 } else { 400 };
+                        tokio::time::sleep(Duration::from_millis(delay_ms)).await;
                     }
                 }
             }

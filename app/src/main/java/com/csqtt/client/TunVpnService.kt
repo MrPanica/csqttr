@@ -262,6 +262,26 @@ class TunVpnService : VpnService() {
                                 }
                             }
                     }
+
+                    // Exclude VK, OK, Mail.ru and direct DNS to prevent tunnel deadlocks and 'no route to host'
+                    val vkExcludeCidrs = listOf(
+                        "87.240.128.0/18", "87.240.192.0/19", "90.156.0.0/16",
+                        "93.186.224.0/21", "95.142.192.0/21", "95.163.0.0/16",
+                        "95.213.0.0/18", "155.212.192.0/20", "185.16.28.0/22",
+                        "194.67.64.0/18", "195.82.146.0/23", "213.180.193.0/24",
+                        "77.88.0.0/18", "1.1.1.1/32", "8.8.8.8/32", "77.88.8.8/32"
+                    )
+                    vkExcludeCidrs.forEach { cidr ->
+                        try {
+                            val parts = cidr.split("/")
+                            val addr = java.net.InetAddress.getByName(parts[0])
+                            if (addr is java.net.Inet4Address) {
+                                builder.excludeRoute(android.net.IpPrefix(addr, parts[1].toInt()))
+                            }
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to exclude default VK CIDR: $cidr", e)
+                        }
+                    }
                 } catch (e: Exception) {
                     Log.w(TAG, "excludeRoute processing failed: ${e.message}", e)
                 }
