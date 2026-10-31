@@ -65,6 +65,11 @@ internal data class ImportedConnectionSettings(
     val vkAccessToken: String = "",
     val power: Int? = null,
     val name: String? = null,
+    val routing: String? = null,
+    val bypassRu: Boolean? = null,
+    val templateDomains: Boolean? = null,
+    val domains: List<String> = emptyList(),
+    val dns: String? = null,
 )
 
 internal data class TunnelAuthSnapshot(
@@ -983,6 +988,35 @@ private val DEPLOY_LAST_INSPECTION_PANEL = booleanPreferencesKey("deploy_last_in
                 prefs[getProfileKey(VK_ACCESS_TOKEN_USER_ID, profile)] = ""
                 prefs[getProfileKey(VK_AUTH_MODE, profile)] = CsqttConstants.VkAuth.MODE_CALLS
                 prefs[getProfileKey(VK_HASH_MODE, profile)] = CsqttConstants.VkAutoHash.MODE_AUTO_API
+            }
+
+            if (imported.routing != null) {
+                val isRule = imported.routing.equals("rule", ignoreCase = true)
+                prefs[getProfileKey(DOMAIN_ROUTING_ENABLED, profile)] = isRule
+            }
+
+            if (imported.bypassRu != null) {
+                prefs[getProfileKey(EXCLUDE_RU_ZONES_ENABLED, profile)] = imported.bypassRu
+            }
+
+            if (imported.templateDomains != null) {
+                prefs[getProfileKey(TEMPLATE_DOMAINS_ENABLED, profile)] = imported.templateDomains
+            }
+
+            if (imported.domains.isNotEmpty()) {
+                val existing = prefs[getProfileKey(DIRECT_DOMAINS_BLACK, profile)].orEmpty()
+                    .split(",")
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
+                val combined = (existing + imported.domains).distinct().take(1024).joinToString(",")
+                prefs[getProfileKey(DIRECT_DOMAINS_BLACK, profile)] = combined
+                prefs[getProfileKey(DOMAIN_ROUTING_ENABLED, profile)] = true
+            }
+
+            if (!imported.dns.isNullOrBlank()) {
+                if (imported.dns.equals("none", ignoreCase = true) || imported.dns.equals("no_dns", ignoreCase = true)) {
+                    prefs[getProfileKey(NO_DNS, profile)] = true
+                }
             }
 
             val name = imported.name?.trim().orEmpty()

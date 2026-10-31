@@ -137,6 +137,11 @@ internal suspend fun SettingsStore.saveImportedLink(
             vkAccessToken = parsed.vkAccessToken,
             power = parsed.power,
             name = customName?.trim()?.ifBlank { null } ?: parsed.host,
+            routing = parsed.routing,
+            bypassRu = parsed.bypassRu,
+            templateDomains = parsed.templateDomains,
+            domains = parsed.domains,
+            dns = parsed.dns,
         ),
         participantLink = rawLink.takeIf { parsed.hashes.isNotEmpty() },
     )

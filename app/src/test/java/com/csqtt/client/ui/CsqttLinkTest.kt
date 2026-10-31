@@ -245,4 +245,47 @@ class CsqttLinkTest {
     fun truncatedEncryptedLinkFailsToDecrypt() {
         assertNull(parseCsqttLink("csqtt://" + java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(ByteArray(10))))
     }
+
+    @Test
+    fun parsesRoutingAndSettingsParameters() {
+        val link = parseCsqttLink(
+            "csqtt://connect?v=2&host=203.0.113.7&peer=46000&password=secret&token=vk1.a.test&routing=rule&bypass_ru=1&template_domains=1&domains=youtube.com%2Cinstagram.com&dns=77.88.8.8%2C1.1.1.1"
+        )
+        requireNotNull(link)
+        assertEquals("203.0.113.7", link.host)
+        assertEquals(46000, link.port)
+        assertEquals("secret", link.password)
+        assertEquals("vk1.a.test", link.vkAccessToken)
+        assertEquals("rule", link.routing)
+        assertEquals(true, link.bypassRu)
+        assertEquals(true, link.templateDomains)
+        assertEquals(listOf("youtube.com", "instagram.com"), link.domains)
+        assertEquals("77.88.8.8,1.1.1.1", link.dns)
+    }
+
+    @Test
+    fun formatsRoutingAndSettingsParameters() {
+        val formatted = formatCsqttLink(
+            host = "203.0.113.7",
+            peer = 46000,
+            password = "secret",
+            token = "vk1.a.test",
+            routing = "rule",
+            bypassRu = true,
+            templateDomains = true,
+            domains = listOf("youtube.com", "instagram.com"),
+            dns = "77.88.8.8,1.1.1.1",
+        )
+        val link = parseCsqttLink(formatted)
+        requireNotNull(link)
+        assertEquals("203.0.113.7", link.host)
+        assertEquals(46000, link.port)
+        assertEquals("secret", link.password)
+        assertEquals("vk1.a.test", link.vkAccessToken)
+        assertEquals("rule", link.routing)
+        assertEquals(true, link.bypassRu)
+        assertEquals(true, link.templateDomains)
+        assertEquals(listOf("youtube.com", "instagram.com"), link.domains)
+        assertEquals("77.88.8.8,1.1.1.1", link.dns)
+    }
 }

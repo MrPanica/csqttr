@@ -12,6 +12,11 @@ data class CsqttLink(
     val hashes: List<String> = emptyList(),
     val vkAccessToken: String = "",
     val power: Int? = null,
+    val routing: String? = null,
+    val bypassRu: Boolean? = null,
+    val templateDomains: Boolean? = null,
+    val domains: List<String> = emptyList(),
+    val dns: String? = null,
 )
 
 /** Power/thread limit from an untrusted link or subscription. */
@@ -181,7 +186,34 @@ private fun parseCsqttV2(uri: java.net.URI): CsqttLink? {
             ?.let(::decodeQueryComponent)
             ?.toIntOrNull(),
     )
-    return CsqttLink(host, port, password, hashes, vkAccessToken, power)
+    val routing = parameters["routing"]?.let(::decodeQueryComponent)?.trim()?.lowercase()
+    val bypassRu = parameters["bypass_ru"]?.let(::decodeQueryComponent)?.trim()?.let {
+        it == "1" || it.equals("true", ignoreCase = true)
+    }
+    val templateDomains = parameters["template_domains"]?.let(::decodeQueryComponent)?.trim()?.let {
+        it == "1" || it.equals("true", ignoreCase = true)
+    }
+    val rawDomains = parameters["domains"]?.let(::decodeQueryComponent)?.trim().orEmpty()
+    val domains = if (rawDomains.isNotEmpty()) {
+        rawDomains.split(',', '+', ' ')
+            .map { it.trim().lowercase().removePrefix("http://").removePrefix("https://").removePrefix("*.") }
+            .filter { it.isNotEmpty() && !it.contains('/') && !it.contains(' ') }
+    } else emptyList()
+    val dns = parameters["dns"]?.let(::decodeQueryComponent)?.trim()
+
+    return CsqttLink(
+        host = host,
+        port = port,
+        password = password,
+        hashes = hashes,
+        vkAccessToken = vkAccessToken,
+        power = power,
+        routing = routing,
+        bypassRu = bypassRu,
+        templateDomains = templateDomains,
+        domains = domains,
+        dns = dns,
+    )
 }
 
 private fun parseRawQuery(rawQuery: String): Map<String, String>? {
@@ -205,7 +237,7 @@ private fun parseRawQuery(rawQuery: String): Map<String, String>? {
         }
     }
 
-    val pattern = Regex("(?:^|[&;]|(?<=[a-zA-Z0-9_]))(v|host|peer|password|client|hashes|token|workers|power)=([^&?]*?)(?=(?:v|host|peer|password|client|hashes|token|workers|power)=|$)", RegexOption.IGNORE_CASE)
+    val pattern = Regex("(?:^|[&;]|(?<=[a-zA-Z0-9_]))(v|host|peer|password|client|hashes|token|workers|power|routing|bypass_ru|template_domains|domains|dns|mtu)=([^&?]*?)(?=(?:v|host|peer|password|client|hashes|token|workers|power|routing|bypass_ru|template_domains|domains|dns|mtu)=|$)", RegexOption.IGNORE_CASE)
     val matches = pattern.findAll(sanitized).toList()
     if (matches.isNotEmpty()) {
         val extracted = linkedMapOf<String, String>()
@@ -307,6 +339,11 @@ fun formatCsqttLink(
     hashes: List<String> = emptyList(),
     token: String = "",
     power: Int? = null,
+    routing: String? = null,
+    bypassRu: Boolean? = null,
+    templateDomains: Boolean? = null,
+    domains: List<String> = emptyList(),
+    dns: String? = null,
 ): String {
     val queryParts = mutableListOf(
         "v=2",
@@ -320,6 +357,21 @@ fun formatCsqttLink(
         queryParts.add("token=${encodeLinkComponent(token)}")
     }
     normalizeCsqttPower(power)?.let { queryParts.add("power=$it") }
+    if (!routing.isNullOrBlank()) {
+        queryParts.add("routing=${encodeLinkComponent(routing)}")
+    }
+    if (bypassRu == true) {
+        queryParts.add("bypass_ru=1")
+    }
+    if (templateDomains == true) {
+        queryParts.add("template_domains=1")
+    }
+    if (domains.isNotEmpty()) {
+        queryParts.add("domains=" + domains.joinToString(",") { encodeLinkComponent(it) })
+    }
+    if (!dns.isNullOrBlank()) {
+        queryParts.add("dns=${encodeLinkComponent(dns)}")
+    }
     val plain = "connect?" + queryParts.joinToString("&")
     return "csqtt://" + encryptCsqttPayload(plain)
 }
